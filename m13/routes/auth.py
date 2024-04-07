@@ -2,13 +2,13 @@ from fastapi import APIRouter, HTTPException, Depends, status, Security, Backgro
 from fastapi.security import OAuth2PasswordRequestForm, HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.requests import Request
 from sqlalchemy.orm import Session
-# from passlib.hash import bcrypt
+#from passlib.hash import bcrypt
 
 from m13.database.db import get_db
 from m13.schemas import UserIn, UserOut, TokenModel, RequestEmail
 from m13.repository import users as repository_users
 from m13.services.auth import auth_service
-from m13.database.models import User
+# from m13.database.models import User
 from m13.services.email_service import send_email
 
 
@@ -34,7 +34,7 @@ async def signup(body: UserIn, background_tasks: BackgroundTasks, request: Reque
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail="Error while saving user to database")
     return UserOut(id=new_user.id, username=new_user.username, email=new_user.email)
-
+    # return {"user": new_user, "detail": "User successfully created"}
 
 @router.post("/login", response_model=TokenModel)
 async def login(body: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -49,8 +49,8 @@ async def login(body: OAuth2PasswordRequestForm = Depends(), db: Session = Depen
     access_token = await auth_service.create_access_token(data={"sub": user.email})
     refresh_token = await auth_service.create_refresh_token(data={"sub": user.email})
     await repository_users.update_token(user, refresh_token, db)
-    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
-
+    # return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
+    return TokenModel(access_token=access_token, refresh_token=refresh_token)
 
 @router.get('/refresh_token', response_model=TokenModel)
 async def refresh_token(credentials: HTTPAuthorizationCredentials = Security(security), db: Session = Depends(get_db)):

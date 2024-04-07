@@ -10,6 +10,7 @@ from alembic import context
 from m13.database.models import Base
 from m13.database.db import SQLALCHEMY_DATABASE_URL
 
+
 config = context.config
 
 config.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URL)
@@ -21,7 +22,9 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
+# target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
+
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

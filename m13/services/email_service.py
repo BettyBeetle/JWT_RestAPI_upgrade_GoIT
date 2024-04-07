@@ -15,11 +15,11 @@ conf = ConnectionConfig(
     MAIL_FROM=settings.mail_from,
     MAIL_PORT=settings.mail_port,
     MAIL_SERVER=settings.mail_server,
-    MAIL_FROM_NAME=settings.mail_from_name,
-    MAIL_STARTTLS=True,
-    MAIL_SSL_TLS=False,
+    MAIL_FROM_NAME="Example email",
+    MAIL_STARTTLS=False,#True
+    MAIL_SSL_TLS=True,#False
     USE_CREDENTIALS=True,
-    VALIDATE_CERTS=True,
+    VALIDATE_CERTS=False,#True
     TEMPLATE_FOLDER=Path(__file__).parent / 'templates',
 )
 

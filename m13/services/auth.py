@@ -6,18 +6,21 @@ from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-# import redis as redis
-# import pickle
+import redis as redis
+import pickle
 
 from m13.conf.config import settings
 from m13.database.db import get_db
 from m13.repository import users as repository_users
+from m13.schemas import UserOut
+
 
 class Auth:
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     SECRET_KEY = settings.secret_key
     ALGORITHM = settings.algorithm
     oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+    r = redis.Redis(host=settings.redis_host, port=settings.redis_port, db=0)
 
     def verify_password(self, plain_password, hashed_password):
         return self.pwd_context.verify(plain_password, hashed_password)
@@ -57,7 +60,7 @@ class Auth:
         except JWTError:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate credentials')
 
-    async def get_current_user(self, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    async def get_current_user(self, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> UserOut:
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -75,31 +78,17 @@ class Auth:
                 raise credentials_exception
         except JWTError as e:
             raise credentials_exception
-        # user = self.r.get(f"user:{email}")
-        # if user is None:
-        #
-        #
-        #
-        #     user = await repository_users.get_user_by_email(email, db)
-        #     if user is None:
-        #         raise credentials_exception
-        #
-        #
-        #
-        #     await self.r.set(f"user:{email}", pickle.dumps(user))
-        #     await self.r.expire(f"user:{email}", 900)
-        # else:
-        #     user = pickle.loads(user)
-        #
-        #
-        # return user
-
-
-        user = await repository_users.get_user_by_email(email, db)
-        if user is None:
-            raise credentials_exception
+        user = self.r.get(f"user:{email}")
+        if user is None:       
+            user = await repository_users.get_user_by_email(email, db)
+            if user is None:
+                raise credentials_exception
+            await self.r.set(f"user:{email}", pickle.dumps(user))
+            await self.r.expire(f"user:{email}", 900)
+        else:
+            user = pickle.loads(user)
         return user
-
+        
     def create_email_token(self, data: dict):
         to_encode = data.copy()
         expire = datetime.utcnow() + timedelta(days=7)

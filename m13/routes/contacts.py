@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, status, Query
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from fastapi.openapi.docs import get_swagger_ui_html
-
+from fastapi_limiter.depends import RateLimiter
 from typing import List
 from sqlalchemy.orm import Session
 
@@ -42,7 +42,7 @@ async def get_upcoming_birthdays(current_user: User = Depends(auth_service.get_c
     return upcoming_birthdays_out_list
 
 
-@router.post("/create", response_model=ContactsOut, status_code=status.HTTP_201_CREATED)
+@router.post("/create", response_model=ContactsOut, status_code=status.HTTP_201_CREATED, description='No more than 5 requests per minute', dependencies=[Depends(RateLimiter(times=5, seconds=60))])
 async def create_contact(
         body: ContactsIn,
         current_user: User = Depends(auth_service.get_current_user),
