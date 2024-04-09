@@ -9,7 +9,7 @@ import uvicorn
 from dotenv import load_dotenv
 
 origins = [
-    "http://localhost:3000"
+    "http://localhost:8000"
     ]
 
 load_dotenv()

@@ -42,6 +42,7 @@ async def create_contact(body: ContactsIn, user:User, db: Session) -> Contacts:
         phone_number = body.phone_number,
         date_of_birth = body.date_of_birth,
         nick = body.nick,
+        user_id=user.id
     )
     db.add(contact)
     db.commit()
